@@ -23,7 +23,7 @@ theorems.
 | `core.py` | Pure JAX kernels: Gaussian update, payoff transport, information and decision values, propagation, residualization, cash flows, reliability mixtures, edge attribution, Dynamax adapter |
 | `algorithms.py` | Eager NumPy/SciPy reference code: coalition values, Shapley, discounted Gramian, mixture VaR/ES, entropic projection, conformal radius |
 | `experiments.py` | Regenerates the Section 6 coverage studies, `results/results.json` and `results/coverage.png` |
-| `tests/` | `test_core.py`, `test_theory.py`, `test_extensions.py` and `test_dynamax.py` (runs against real `LinearGaussianSSM.filter` output) |
+| `tests/` | `test_core.py`, `test_theory.py`, `test_extensions.py`, `test_dynamax.py` (runs against real `LinearGaussianSSM.filter` output) and `test_oracles.py` (randomized checks against independent oracles) |
 
 ```bash
 pip install -e . scipy pytest matplotlib
@@ -31,9 +31,25 @@ python -m pytest fininfo            # 64-bit arithmetic is enabled in tests/conf
 python -m fininfo.experiments
 ```
 
-Applications must enable `jax_enable_x64` themselves. `validate_channel` is an
-eager check. Compiled kernels perform no data-dependent checks, jitter or
-clipping.
+Applications must enable `jax_enable_x64` themselves.
+
+**Validation.** Three eager validators check inputs before any kernel runs:
+
+- `validate_covariance` checks finiteness, symmetry, and positive
+  semidefiniteness (or definiteness with `definite=True`).
+- `validate_channel` checks the shapes and covariances of $(m,P,M,s,R)$ and
+  requires $R\succ0$.
+- `validate_payoff` checks $(B_h,N_h,d_h)$ against the state dimension.
+
+Inside the kernels:
+
+- Scalar arguments are range-checked whenever they are concrete:
+  probabilities, coverage levels and risk aversion.
+- Horizons must be genuine integers (`bool` is rejected).
+- Every linear solve that needs a positive-definite matrix goes through a
+  Cholesky factor. A non-SPD input therefore yields NaN, never a finite but
+  meaningless number.
+- Under `jit`, no data-dependent check, jitter or clipping is applied.
 
 ## Probability model
 
@@ -160,23 +176,66 @@ equilibrium response to public news.
   and the future-noise variance $\sum_jb_j^\top Q_jb_j$
   (`cashflow_projection`). This keeps cross-horizon dependence that summing
   marginal variances would lose.
-- **Reliability.** Suppose the source is informative with probability $\pi$
-  and otherwise produces null evidence. The posterior is a mixture with mean
-  $m+wd$ and covariance $wP_++(1-w)P+w(1-w)dd^\top$
-  (`reliability_update`). It can exceed the prior variance.
+- **Reliability.** Suppose the source is informative with probability $\pi$.
+  Otherwise it emits $s\sim f_0$, where $f_0$ is any density that does not
+  depend on the state. Bayes' rule gives
+  $w(s)=\pi\,\mathcal N(s;Mm,\Sigma)/[\pi\,\mathcal N(s;Mm,\Sigma)+(1-\pi)f_0(s)]$.
+  The posterior is the mixture $w\,\mathcal N(m_+,P_+)+(1-w)\,\mathcal N(m,P)$,
+  with $d=m_+-m$, mean $m+wd$ and covariance $wP_++(1-w)P+w(1-w)dd^\top$.
+  - `reliability_mixture` takes $\log f_0(s)$ directly.
+  - `reliability_update` is the Gaussian-null special case.
+  - The covariance can exceed the prior covariance.
+  - `reliability_payoff` transports both components to $Y_h$. Intervals must
+    use this mixture law, not a Gaussian with its summary moments.
+  - A test with a Student-$t$ null checks the mixture against direct
+    quadrature of the scalar posterior.
 - **Quadratic payoffs.** `quadratic_moments` gives exact moments. The law is
   not Gaussian.
+
+## Verification
+
+`tests/test_oracles.py` re-derives each result by a route that shares no code
+with the kernel under test. It uses 12 random seeds for each identity:
+
+| Claim | Independent oracle |
+| --- | --- |
+| Theorem 3.1 posterior | Schur complement of the joint $(Z,S)$ covariance |
+| $I(Z;S)$ and log evidence | $h(Z)+h(S)-h(Z,S)$ from log-determinants; `scipy.stats.multivariate_normal` |
+| Singular $P$ | $P=P_++D$, $P_+\succeq0$, mean moves only within $\operatorname{range}(P)$ |
+| Corollary 3.2 | Random invertible state and signal transforms preserve the revision, $\Delta_h$, $I(Z;S)$ and the singular values of $L_h$ |
+| Theorem 3.3 | Trace bounds and the data-processing inequality $I(Y_h;S)\le I(Z;S)$ |
+| Residualization | Sequential update equals batch update, and information adds; the naive update is shown to differ |
+| Edge attribution, $h=1..8$ | Completeness, plus 40-node quadrature of the analytic gradient with a nonzero baseline |
+| `cashflow_projection` | 400,000-path simulation of the time-varying dynamics |
+| `reliability_mixture` | Quadrature of the scalar posterior under a Student-$t$ null |
 
 ## Synthetic evidence (Section 6)
 
 These are nominal 95% predictive-interval coverages from
-`python -m fininfo.experiments`, with seeds recorded in
-`results/results.json`:
+`python -m fininfo.experiments`. `results/results.json` records the seeds,
+parameters and versions. Each coverage is a mean of independent hits. The
+table shows it with a Wilson 95% interval and $z$, its distance from 0.95 in
+binomial standard errors:
 
-| Study | Correct model | Misspecified model |
-| --- | --- | --- |
-| 100,000 draws, packet errors correlated 0.8 | full $R$: 94.97% | diagonal $R$: 91.15% |
-| 80,000 draws, informative probability 0.6, null $\mathcal N(0,4)$ | reliability mixture: 95.13% | always trusted: 72.54% |
+| Study | Predictive law | Coverage | Wilson 95% | $z$ |
+| --- | --- | --- | --- | --- |
+| 100,000 draws, packet errors correlated 0.8 | no packet (prior) | 95.05% | [94.92, 95.18] | +0.8 |
+| | full $R$ | 94.97% | [94.84, 95.11] | −0.4 |
+| | diagonal $R$ | 91.15% | [90.98, 91.33] | −55.8 |
+| 80,000 draws, informative probability 0.6, null $\mathcal N(0,4)$ | reliability mixture | 95.13% | [94.97, 95.27] | +1.6 |
+| | moment-matched Gaussian | 94.77% | [94.61, 94.92] | −3.0 |
+| | always trusted | 72.54% | [72.23, 72.85] | −291.5 |
+
+The correct models are consistent with 0.95. The misspecified ones are
+rejected by many standard errors.
+
+Even a Gaussian with the exact mixture mean and variance misses at this seed.
+Only the variance is right, not the shape: the mixture is heavier-tailed, so a
+Gaussian interval of the right width covers the wrong set.
+
+The mixture interval endpoints come from vectorized bisection. On 500 draws
+they agree with Brent's method (`algorithms.mixture_quantile`) to
+$10^{-12}$.
 
 The draft does not specify its exact generating parameters, so these
 percentages differ from the draft's figures. The qualitative conclusion

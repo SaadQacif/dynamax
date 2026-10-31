@@ -5,6 +5,7 @@ from eager reference algorithms in :mod:`fininfo.algorithms`.
 """
 
 from fininfo.core import (
+    MixturePayoff,
     Payoff,
     Relevance,
     ReliableUpdate,
@@ -26,15 +27,20 @@ from fininfo.core import (
     propagate,
     quadratic_decision_value,
     quadratic_moments,
+    reliability_mixture,
+    reliability_payoff,
     reliability_update,
     residualize_second,
     structural_response,
     validate_channel,
+    validate_covariance,
+    validate_payoff,
     weighted_value,
     whitened_transmission,
 )
 
 __all__ = [
+    "MixturePayoff",
     "Payoff",
     "Relevance",
     "ReliableUpdate",
@@ -56,10 +62,14 @@ __all__ = [
     "propagate",
     "quadratic_decision_value",
     "quadratic_moments",
+    "reliability_mixture",
+    "reliability_payoff",
     "reliability_update",
     "residualize_second",
     "structural_response",
     "validate_channel",
+    "validate_covariance",
+    "validate_payoff",
     "weighted_value",
     "whitened_transmission",
 ]

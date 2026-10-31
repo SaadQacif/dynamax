@@ -3,6 +3,10 @@
   "correlated_packets": {
     "draws": 100000,
     "seed": 0,
+    "parameters": {
+      "prior_variance": 1.0,
+      "payoff_noise": 0.2
+    },
     "noise_covariance": [
       [
         0.5,
@@ -18,6 +22,35 @@
       "full_R": 0.94973,
       "diagonal_R": 0.91153
     },
+    "uncertainty": {
+      "no_packet": {
+        "coverage": 0.95052,
+        "standard_error": 0.0006857968328885748,
+        "wilson_95": [
+          0.9491584714430314,
+          0.9518469168060069
+        ],
+        "z_vs_nominal": 0.754495300114522
+      },
+      "full_R": {
+        "coverage": 0.94973,
+        "standard_error": 0.0006909625684507087,
+        "wilson_95": [
+          0.9483583785484334,
+          0.9510670703933227
+        ],
+        "z_vs_nominal": -0.39175717505939517
+      },
+      "diagonal_R": {
+        "coverage": 0.91153,
+        "standard_error": 0.000898014805557236,
+        "wilson_95": [
+          0.9097540779901779,
+          0.9132743057133795
+        ],
+        "z_vs_nominal": -55.81814268346428
+      }
+    },
     "predictive_variance": {
       "full_R": 0.5103448275862069,
       "diagonal_R": 0.4
@@ -27,9 +60,49 @@
     "draws": 80000,
     "seed": 1,
     "informative_probability": 0.6,
+    "parameters": {
+      "prior_variance": 1.0,
+      "payoff_noise": 0.2,
+      "channel_noise": 0.1,
+      "null_variance": 4.0
+    },
     "coverage": {
       "reliability_mixture": 0.9512625,
-      "always_trusted": 0.7253875
+      "always_trusted": 0.7253875,
+      "moment_matched_gaussian": 0.9476625
+    },
+    "uncertainty": {
+      "reliability_mixture": {
+        "coverage": 0.9512625,
+        "standard_error": 0.0007612666754639105,
+        "wilson_95": [
+          0.9497486554401913,
+          0.9527330089829298
+        ],
+        "z_vs_nominal": 1.6384363534207727
+      },
+      "always_trusted": {
+        "coverage": 0.7253875,
+        "standard_error": 0.0015779752645548267,
+        "wilson_95": [
+          0.7222839584399389,
+          0.7284693971793873
+        ],
+        "z_vs_nominal": -291.49567162986705
+      },
+      "moment_matched_gaussian": {
+        "coverage": 0.9476625,
+        "standard_error": 0.0007873871831391945,
+        "wilson_95": [
+          0.946097641908035,
+          0.9491843682297793
+        ],
+        "z_vs_nominal": -3.033540575145248
+      }
+    },
+    "quantile_check": {
+      "draws": 500,
+      "max_abs_error_vs_brentq": 9.912071163853398e-13
     }
   },
   "versions": {
