@@ -75,7 +75,7 @@ $\Phi_h$ and $\sum_j (F_h\cdots F_{j+1})Q_j(\cdot)^\top$).
 | --- | --- | --- | --- |
 | $I(Z;S)$ | ex-ante state information | nats | `condition(...).information_nats` |
 | $\delta_h(s)$ | realized revision of the payoff mean | payoff | `linear_payoff(...).revision` |
-| $V_W=\operatorname{tr}(W\Delta_h)$ | expected reduction of squared forecast loss | payoff² | `weighted_value` |
+| $V_W=\mathrm{tr}(W\Delta_h)$ | expected reduction of squared forecast loss | payoff² | `weighted_value` |
 | $c_{\text{info}}$ | cash fee in an explicit CARA problem | currency | `cara_information_fee` |
 | $\mathrm{ES}_\alpha(L\mid s)$ | physical-model tail loss | loss | `normal_es`, `mixture_es` |
 
@@ -98,7 +98,7 @@ With $T_h = B_hK$, the revision is
 $$\delta_h(S)=T_h(S-Mm)\sim\mathcal N(0,\Delta_h),\qquad \Delta_h=B_hDB_h^\top .$$
 
 For a PSD weight $A$, the ex-ante reduction of optimal quadratic loss is
-$\operatorname{tr}(A\Delta_h)$. `condition` uses a Cholesky gain and the Joseph
+$\mathrm{tr}(A\Delta_h)$. `condition` uses a Cholesky gain and the Joseph
 covariance form.
 
 **Corollary 3.2 (whitening and invariance).** Let $\Sigma=LL^\top$. Then
@@ -118,14 +118,14 @@ $$I(Y_h;S) = -\tfrac12\sum_i\log(1-\rho_i^2)\ \le\ I(Z;S),$$
 
 and
 
-$$1-e^{-2I(Y_h;S)}\le\operatorname{tr}J\le p\big(1-e^{-2I(Y_h;S)/p}\big)$$
+$$1-e^{-2I(Y_h;S)}\le\mathrm{tr},J\le p\big(1-e^{-2I(Y_h;S)/p}\big)$$
 
 (`canonical_relevance`). State information can be large while every
 financially relevant mode is zero.
 
 **Proposition 3.4 (noise sensitivity).** For $E\succeq0$,
 
-$$\tfrac{d}{d\epsilon}\operatorname{tr}\big(WD(R+\epsilon E)\big)\big|_0=-\operatorname{tr}\big(\Sigma^{-1}MPWPM^\top\Sigma^{-1}E\big)\le0$$
+$$\tfrac{d}{d\epsilon}\mathrm{tr}\big(WD(R+\epsilon E)\big)\big|_0=-\mathrm{tr}\big(\Sigma^{-1}MPWPM^\top\Sigma^{-1}E\big)\le0$$
 
 (`noise_sensitivity`).
 
@@ -134,7 +134,7 @@ $$\tfrac{d}{d\epsilon}\operatorname{tr}\big(WD(R+\epsilon E)\big)\big|_0=-\opera
 **Theorem 4.1.** Take positions $a\in\mathcal A$, a closed convex set, with
 objective $a^\top\mu-\tfrac12a^\top Ha$ and fixed $H\succ0$ in currency. Then
 
-$$0\le\mathbb E f(\mu_S)-f(\mu)\le\tfrac12\operatorname{tr}(H^{-1}\Delta),$$
+$$0\le\mathbb E f(\mu_S)-f(\mu)\le\tfrac12\mathrm{tr}(H^{-1}\Delta),$$
 
 with equality for unrestricted positions (`quadratic_decision_value`). Deciding
 with a mistaken mean $\hat\mu$ costs at most
@@ -162,11 +162,11 @@ equilibrium response to public news.
   $\tilde S_2=S_2-AS_1$ with noise $R_{22}-R_{21}R_{11}^{-1}R_{12}$. Sequential
   updating is then exactly equal to the batch update (`residualize_second`).
   Ignoring $R_{21}$ is not equivalent.
-- **No diminishing returns.** Let $v(A)=\operatorname{tr}[W(P-P_A)]$. This is
+- **No diminishing returns.** Let $v(A)=\mathrm{tr}[W(P-P_A)]$. This is
   monotone, and its Shapley allocation is nonnegative and efficient
   (`coalition_values`, `shapley`). However, with $Y=Z_1$,
   $S_1=Z_1+Z_2+\varepsilon_1$ and $S_2=Z_2+\varepsilon_2$, we get
-  $v(\{2\})=0<v(\{1,2\})-v(\{1\})$. The objective is not submodular.
+  $v(\lbrace 2\rbrace)=0\lt v(\lbrace 1,2\rbrace)-v(\lbrace 1\rbrace)$. The objective is not submodular.
 - **Edge attribution.** Integrated gradients of $c^\top F^h d$ with respect to
   the entries of $F$ sum exactly to $r(F)-r(F_0)$, using Gauss–Legendre order
   $\lceil h/2\rceil$ (`edge_attribution`). The result depends on the basis and
@@ -201,7 +201,7 @@ with the kernel under test. It uses 12 random seeds for each identity:
 | --- | --- |
 | Theorem 3.1 posterior | Schur complement of the joint $(Z,S)$ covariance |
 | $I(Z;S)$ and log evidence | $h(Z)+h(S)-h(Z,S)$ from log-determinants; `scipy.stats.multivariate_normal` |
-| Singular $P$ | $P=P_++D$, $P_+\succeq0$, mean moves only within $\operatorname{range}(P)$ |
+| Singular $P$ | $P=P_++D$, $P_+\succeq0$, mean moves only within $\mathrm{range}(P)$ |
 | Corollary 3.2 | Random invertible state and signal transforms preserve the revision, $\Delta_h$, $I(Z;S)$ and the singular values of $L_h$ |
 | Theorem 3.3 | Trace bounds and the data-processing inequality $I(Y_h;S)\le I(Z;S)$ |
 | Residualization | Sequential update equals batch update, and information adds; the naive update is shown to differ |
