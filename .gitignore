@@ -2,7 +2,7 @@ __pycache__/
 docs/_build/
 build/
 dist/
-
+Financial_Information_Research_Draft.pdf
 .coverage
 
 *egg-info

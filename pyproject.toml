@@ -99,7 +99,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-exclude = ["logo", "docs"] 
+exclude = ["logo", "docs", "fininfo*"]
 
 
 [tool.versioneer]

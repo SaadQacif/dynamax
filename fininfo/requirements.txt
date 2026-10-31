@@ -1,0 +1,4 @@
+# Extra dependencies of fininfo beyond Dynamax itself (pip install -e . first).
+scipy
+matplotlib
+pytest
